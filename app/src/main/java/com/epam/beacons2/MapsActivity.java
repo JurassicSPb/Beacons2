@@ -8,7 +8,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,8 +41,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient mFusedLocationClient;
     private GroundOverlayOptions groundOverlayOptions;
     private GroundOverlayOptions groundOverlayOptions2;
-    private LatLng epamLoc = new LatLng(59.9851017, 30.3097383);
+    private LatLng epamLocReal = new LatLng(59.9851017, 30.3097383);
     private LatLng epamLoc0 = new LatLng(0, 0);
+    private LatLng epamLocSouthWest = new LatLng(-0.0001, -0.0001);
+    private LatLng epamLocNorthEast = new LatLng(0.0001, 0.0001);
+
     private double latitude = 0.0;
     private double longitude = 0.0;
 
@@ -55,7 +57,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final static String ACCURACY = "iBeacon, accuracy: ";
 
     @Override
-//    @SuppressWarnings("MissingPermission")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
@@ -67,15 +68,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         proximity = (TextView) findViewById(R.id.proximity);
 
-//        LatLng epamLoc = new LatLng(59.9851017, 30.3097383);
-
         groundOverlayOptions = new GroundOverlayOptions()
                 .image(BitmapDescriptorFactory.fromResource(R.drawable.map))
-                .position(epamLoc, 110f, 80f);
+                .position(epamLoc0, 110f, 80f);
 
         groundOverlayOptions2 = new GroundOverlayOptions()
                 .image(BitmapDescriptorFactory.fromResource(R.drawable.map2))
-                .position(epamLoc, 110f, 80f);
+                .position(epamLocReal, 110f, 80f);
 
         init();
 
@@ -114,22 +113,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
 
-        LatLng currentLoc = new LatLng(latitude, longitude);
+//        LatLng currentLoc = new LatLng(latitude, longitude);
 
         // LatLng southwest, LatLng northeast
-       LatLngBounds epam = new LatLngBounds(epamLoc, epamLoc);
+        LatLngBounds epamBounds = new LatLngBounds(epamLoc0, epamLoc0);
+        LatLngBounds epamCameraBounds = new LatLngBounds(epamLocSouthWest, epamLocNorthEast);
 
-        mMap.addMarker(new MarkerOptions().position(epamLoc).title("Marker in Current Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc0).title("Marker in Current Location"));
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(epam.getCenter(), 0));
-        mMap.setLatLngBoundsForCameraTarget(epam);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(epamBounds.getCenter(), 0));
+        mMap.setLatLngBoundsForCameraTarget(epamCameraBounds);
 
         mMap.setMyLocationEnabled(true);
 
         final GroundOverlay imageOverlay = mMap.addGroundOverlay(groundOverlayOptions);
         imageOverlay.setClickable(true);
 
-        mMap.setMinZoomPreference(19.0f);
+        mMap.setMinZoomPreference(20.5f);
         mMap.setMaxZoomPreference(30.0f);
 
         Polyline polyline = mMap.addPolyline(new PolylineOptions()

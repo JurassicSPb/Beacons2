@@ -135,12 +135,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Polyline polyline = mMap.addPolyline(new PolylineOptions()
                 .clickable(true)
                 .add(
-                        new LatLng(59.9851017, 30.3097383),
-                        new LatLng(59.9851217, 30.3097483),
-                        new LatLng(59.9851217, 30.3096483),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(60, 30.3096383)
+                        epamLocNorthEast,
+                        epamLocSouthWest,
+                        new LatLng(-0.0001, 0.0001)
                 ));
 
         mMap.setOnGroundOverlayClickListener(new GoogleMap.OnGroundOverlayClickListener() {
@@ -157,7 +154,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
-
     }
 
     @Override
@@ -221,6 +217,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
                 update(newDeivce, newRssi, newScanRecord);
                 showProximity();
+
+                
+//                LatLng newLatLng = getLocationByTrilateration(epamLocSouthWest, scannedDevices.get(0).getIBeacon().getAccuracy(),
+//                        epamLocSouthWest, scannedDevices.get(1).getIBeacon().getAccuracy(),
+//                        epamLocNorthEast, scannedDevices.get(2).getIBeacon().getAccuracy());
+//
+//                mMap.addMarker(new MarkerOptions().position(newLatLng).title("Marker in Second Location"));
             }
         }, 100);
     }
@@ -245,18 +248,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             scannedDevices.add(new ScannedDevice(newDevice, rssi, scanRecord));
         }
 
-        // sort by RSSI
+        // sort by distance
         Collections.sort(scannedDevices, new Comparator<ScannedDevice>() {
             @Override
             public int compare(ScannedDevice lhs, ScannedDevice rhs) {
-                if (lhs.getRssi() == 0) {
+                if (lhs.getIBeacon().getAccuracy() == 0) {
                     return 1;
-                } else if (rhs.getRssi() == 0) {
+                } else if (rhs.getIBeacon().getAccuracy() == 0) {
                     return -1;
                 }
-                if (lhs.getRssi() > rhs.getRssi()) {
+                if (lhs.getIBeacon().getAccuracy() > rhs.getIBeacon().getAccuracy()) {
                     return -1;
-                } else if (lhs.getRssi() < rhs.getRssi()) {
+                } else if (lhs.getIBeacon().getAccuracy() < rhs.getIBeacon().getAccuracy()) {
                     return 1;
                 }
                 return 0;

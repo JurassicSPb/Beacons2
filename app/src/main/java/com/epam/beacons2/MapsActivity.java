@@ -4,21 +4,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-import android.location.Location;
-import android.os.PersistableBundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import com.epam.beacons2.util.BleUtil;
 import com.epam.beacons2.util.ScannedDevice;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -31,7 +24,6 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,6 +37,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GroundOverlayOptions groundOverlayOptions;
     private GroundOverlayOptions groundOverlayOptions2;
     private LatLng epamLoc = new LatLng(59.9851017, 30.3097383);
+    private LatLng epamLoc0 = new LatLng(0, 0);
     private double latitude = 0.0;
     private double longitude = 0.0;
 
@@ -116,6 +109,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Add a marker in Sydney and move the camera
         LatLng currentLoc = new LatLng(latitude, longitude);
 
+        // LatLng southwest, LatLng northeast
        LatLngBounds epam = new LatLngBounds(epamLoc, epamLoc);
 
         mMap.addMarker(new MarkerOptions().position(epamLoc).title("Marker in Current Location"));
@@ -166,8 +160,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Toast toast = Toast.makeText(context, text, duration);
                 toast.show();
 
-
-
 //                GroundOverlay imageOverlay2 = mMap.addGroundOverlay(groundOverlayOptions2);
 
             }
@@ -217,8 +209,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if ((mBTAdapter != null) && (!mIsScanning)) {
             mBTAdapter.startLeScan(this);
             mIsScanning = true;
-//            setProgressBarIndeterminateVisibility(true);
-//            invalidateOptionsMenu();
         }
     }
 
@@ -227,23 +217,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mBTAdapter.stopLeScan(this);
         }
         mIsScanning = false;
-//        setProgressBarIndeterminateVisibility(false);
-//        invalidateOptionsMenu();
     }
 
     @Override
     public void onLeScan(final BluetoothDevice newDeivce, final int newRssi,
                          final byte[] newScanRecord) {
-        runOnUiThread(new Runnable() {
+
+        this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-//                Log.d(MapsActivity.class.getSimpleName(), "herehere");
-//                String summary = mDeviceAdapter.update(newDeivce, newRssi, newScanRecord);
-                String summary = newDeivce.toString();
-                Log.d(MapsActivity.class.getSimpleName(), "herehere " + summary);
-//                scannedDevices.add(new ScannedDevice(newDeivce, newRssi, newScanRecord));
                 update(newDeivce, newRssi, newScanRecord);
-
+                showProximity();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -266,7 +255,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (!contains) {
             // add new BluetoothDevice
             scannedDevices.add(new ScannedDevice(newDevice, rssi, scanRecord));
-//            Log.d(MapsActivity.class.getSimpleName(), "herehere" + scannedDevices.get(0).getDisplayName());
         }
 
         // sort by RSSI
@@ -286,5 +274,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return 0;
             }
         });
+    }
+
+    public void showProximity() {
+        if (scannedDevices.size()>0){
+            for (ScannedDevice sc : scannedDevices){
+                if (sc.getIBeacon() != null) {
+                    Log.d(MapsActivity.class.getSimpleName(), "iBeacon, proximity: " + sc.getIBeacon().getProximity());
+                }
+            }
+        }
     }
 }

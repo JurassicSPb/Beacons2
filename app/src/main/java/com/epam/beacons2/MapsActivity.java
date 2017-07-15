@@ -4,14 +4,18 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.epam.beacons2.util.BleUtil;
 import com.epam.beacons2.util.ScannedDevice;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -24,6 +28,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +37,7 @@ import java.util.Comparator;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, BluetoothAdapter.LeScanCallback{
 
+    private TextView proximity;
     private GoogleMap mMap;
     private FusedLocationProviderClient mFusedLocationClient;
     private GroundOverlayOptions groundOverlayOptions;
@@ -45,32 +51,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean mIsScanning;
     private ArrayList <ScannedDevice> scannedDevices = new ArrayList<>();
 
+    private final static String PROXIMITY = "iBeacon, proximity: ";
+    private final static String ACCURACY = "iBeacon, accuracy: ";
+
     @Override
 //    @SuppressWarnings("MissingPermission")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-//        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-//
-//        mFusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        // Got last known location. In some rare situations this can be null.
-//                        if (location != null) {
-//                            latitude = location.getLatitude();
-//                            Log.d(MapsActivity.class.getSimpleName(), "herehere"  + latitude);
-//                            longitude = location.getLongitude();
-//                            Log.d(MapsActivity.class.getSimpleName(), "herehere " + longitude);
-//                        }
-//                    }
-//                });
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        proximity = (TextView) findViewById(R.id.proximity);
 
 //        LatLng epamLoc = new LatLng(59.9851017, 30.3097383);
 
@@ -83,15 +78,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .position(epamLoc, 110f, 80f);
 
         init();
-        startScan();
 
+        if ((mBTAdapter != null) && (!mBTAdapter.isEnabled())) {
+            Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
+        } else startScan();
     }
 
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
+     * This is where we can add markers or lines, add listeners or move the camera.
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
@@ -102,11 +98,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        mMap.setBuildingsEnabled(false);
-        mMap.setIndoorEnabled(false);
-        mMap.setMapType(0);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
 
-        // Add a marker in Sydney and move the camera
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                        }
+                    }
+                });
+
         LatLng currentLoc = new LatLng(latitude, longitude);
 
         // LatLng southwest, LatLng northeast
@@ -131,20 +138,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         new LatLng(59.9851017, 30.3097383),
                         new LatLng(59.9851217, 30.3097483),
                         new LatLng(59.9851217, 30.3096483),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
-                        new LatLng(59.9851017, 30.3096383),
                         new LatLng(59.9851017, 30.3096383),
                         new LatLng(59.9851017, 30.3096383),
                         new LatLng(60, 30.3096383)
@@ -173,7 +166,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if ((mBTAdapter != null) && (!mBTAdapter.isEnabled())) {
             Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
-//            invalidateOptionsMenu();
         } else startScan();
     }
 
@@ -223,18 +215,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onLeScan(final BluetoothDevice newDeivce, final int newRssi,
                          final byte[] newScanRecord) {
 
-        this.runOnUiThread(new Runnable() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 update(newDeivce, newRssi, newScanRecord);
                 showProximity();
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
             }
-        });
+        }, 100);
     }
 
     public void update(BluetoothDevice newDevice, int rssi, byte[] scanRecord) {
@@ -277,12 +265,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void showProximity() {
+        final StringBuilder builder = new StringBuilder();
         if (scannedDevices.size()>0){
             for (ScannedDevice sc : scannedDevices){
                 if (sc.getIBeacon() != null) {
-                    Log.d(MapsActivity.class.getSimpleName(), "iBeacon, proximity: " + sc.getIBeacon().getProximity());
+                    builder.append(PROXIMITY).append(sc.getIBeacon().getProximity())
+                            .append("\n").append(ACCURACY).append(sc.getIBeacon().getAccuracy()).append("\n");
+                    proximity.setText(builder.toString());
                 }
             }
+
         }
     }
 }

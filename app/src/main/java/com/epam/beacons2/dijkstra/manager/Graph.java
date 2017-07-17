@@ -45,7 +45,7 @@ public class Graph {
     }
 
     private boolean containsTwoVertexes(int sourceVertexId, int destinationVertexId) {
-        return vertexesList.contains(new Vertex(sourceVertexId)) && vertexesList.contains(new Vertex(sourceVertexId));
+        return vertexesList.contains(new Vertex(sourceVertexId)) && vertexesList.contains(new Vertex(destinationVertexId));
     }
 
     public Graph addEdge(Edge edge) {

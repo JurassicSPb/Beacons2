@@ -1,18 +1,15 @@
 package com.epam.beacons2;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.le.BluetoothLeScanner;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.epam.beacons2.dijkstra.engine.DijkstraAlgorithm;
 import com.epam.beacons2.dijkstra.manager.Graph;
 import com.epam.beacons2.dijkstra.model.Vertex;
-import com.epam.beacons2.util.ScannedDevice;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -24,10 +21,8 @@ import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -38,8 +33,8 @@ public class MockActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient mFusedLocationClient;
     private GroundOverlayOptions groundOverlayOptions;
     private GroundOverlayOptions groundOverlayOptions2;
-    private LatLng epamLocSouthWest = new LatLng(-0.0002, -0.0002);
-    private LatLng epamLocNorthEast = new LatLng(0.0002, 0.0002);
+    private LatLng epamLocSouthWest = new LatLng(-0.0002, -0.0004);
+    private LatLng epamLocNorthEast = new LatLng(0.0002, 0.0004);
 
     private LatLng epamLoc0 = new LatLng(0, 0);
     private LatLng epamLoc1 = new LatLng(0.00013, 0.00042);
@@ -80,25 +75,11 @@ public class MockActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
 
     @Override
-    @SuppressWarnings("MissingPermission")
+//    @SuppressWarnings("MissingPermission")
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
         mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
-
-//        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-//
-//        mFusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        // Got last known location. In some rare situations this can be null.
-//                        if (location != null) {
-//                            latitude = location.getLatitude();
-//                            longitude = location.getLongitude();
-//                        }
-//                    }
-//                });
 
         // LatLng southwest, LatLng northeast
         LatLngBounds epamBounds = new LatLngBounds(epamLoc0, epamLoc0);
@@ -118,7 +99,7 @@ public class MockActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(epamBounds.getCenter(), 0));
         mMap.setLatLngBoundsForCameraTarget(epamCameraBounds);
 
-        mMap.setMyLocationEnabled(true);
+//        mMap.setMyLocationEnabled(true);
 
         final GroundOverlay imageOverlay = mMap.addGroundOverlay(groundOverlayOptions);
         imageOverlay.setClickable(true);
@@ -128,7 +109,7 @@ public class MockActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         DijkstraAlgorithm algorithm = new DijkstraAlgorithm(createGraph());
         algorithm.execute(1);
-        List<Vertex> vertexList = algorithm.getPath(9);
+        List<Vertex> vertexList = algorithm.getPath(7);
 
 
         PolylineOptions polylineOptions = new PolylineOptions();
@@ -166,17 +147,16 @@ public class MockActivity extends AppCompatActivity implements OnMapReadyCallbac
                 addVertex(new Vertex(10, "", epamLoc10));
 
         graph.addEdge(1, 2, 85).
-                addEdge(2, 5, 217).
-                addEdge(5, 7, 173).
-                addEdge(2, 6, 186).
-                addEdge(2, 7, 103).
-                addEdge(3, 7, 183).
-                addEdge(5, 8, 250).
+                addEdge(2, 3, 100).
+                addEdge(3, 4, 173).
+                addEdge(4, 5, 186).
+                addEdge(4, 9, 183).
+                addEdge(4, 8, 183).
+                addEdge(5, 6, 100).
+                addEdge(6, 7, 120).
                 addEdge(8, 9, 84).
-                addEdge(7, 9, 167).
-                addEdge(4, 9, 502).
-                addEdge(9, 10, 40).
-                addEdge(1, 10, 600);
+                addEdge(7, 8, 167).
+                addEdge(9, 10, 40);
 
         return graph;
     }

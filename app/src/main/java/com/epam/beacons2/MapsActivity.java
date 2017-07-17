@@ -14,6 +14,9 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.epam.beacons2.dijkstra.engine.DijkstraAlgorithm;
+import com.epam.beacons2.dijkstra.manager.Graph;
+import com.epam.beacons2.dijkstra.model.Vertex;
 import com.epam.beacons2.util.BleUtil;
 import com.epam.beacons2.util.ScannedDevice;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -33,6 +36,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, BluetoothAdapter.LeScanCallback {
@@ -43,13 +47,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GroundOverlayOptions groundOverlayOptions;
     private GroundOverlayOptions groundOverlayOptions2;
     private LatLng epamLocReal = new LatLng(59.9851017, 30.3097383);
-    private LatLng epamLoc0 = new LatLng(0, 0);
-    private LatLng epamLocSouthWest = new LatLng(-0.0001, -0.0001);
-    private LatLng epamLocNorthEast = new LatLng(0.0001, 0.0001);
+    private LatLng epamLocSouthWest = new LatLng(-0.0002, -0.0004);
+    private LatLng epamLocNorthEast = new LatLng(0.0002, 0.0004);
     private LatLng epamLocTest1 = new LatLng(0.0002, 0.0002);
 
-    private double latitude = 0.0;
-    private double longitude = 0.0;
+    private LatLng epamLoc0 = new LatLng(0, 0);
+    private LatLng epamLoc1 = new LatLng(0.00013, 0.00042);
+    private LatLng epamLoc2 = new LatLng(0.00017, 0.00038);
+    private LatLng epamLoc3 = new LatLng(0.00017, 0.00020);
+    private LatLng epamLoc4 = new LatLng(0.00002, 0.00020);
+    private LatLng epamLoc5 = new LatLng(0.00002, -0.00016);
+    private LatLng epamLoc6 = new LatLng(-0.00013, -0.00016);
+    private LatLng epamLoc7 = new LatLng(-0.00032, -0.00012);
+    private LatLng epamLoc8 = new LatLng(-0.00032, 0.00021);
+    private LatLng epamLoc9 = new LatLng(-0.00027, 0.00024);
+    private LatLng epamLoc10 = new LatLng(-0.00024, 0.00032);
 
     private BluetoothLeScanner bluetoothLeScanner;
     private BluetoothAdapter mBTAdapter;
@@ -95,37 +107,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      * installed Google Play services and returned to the app.
      */
 
-    @Override
-    @SuppressWarnings("MissingPermission")
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
         mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
 
-//        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-//
-//        mFusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        // Got last known location. In some rare situations this can be null.
-//                        if (location != null) {
-//                            latitude = location.getLatitude();
-//                            longitude = location.getLongitude();
-//                        }
-//                    }
-//                });
-
         // LatLng southwest, LatLng northeast
         LatLngBounds epamBounds = new LatLngBounds(epamLoc0, epamLoc0);
         LatLngBounds epamCameraBounds = new LatLngBounds(epamLocSouthWest, epamLocNorthEast);
 
-        mMap.addMarker(new MarkerOptions().position(epamLoc0).title("Marker in Current Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc1).title("Marker in 1 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc2).title("Marker in 2 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc3).title("Marker in 3 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc4).title("Marker in 4 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc5).title("Marker in 5 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc6).title("Marker in 6 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc7).title("Marker in 7 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc8).title("Marker in 8 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc9).title("Marker in 9 Location"));
+        mMap.addMarker(new MarkerOptions().position(epamLoc10).title("Marker in 10 Location"));
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(epamBounds.getCenter(), 0));
         mMap.setLatLngBoundsForCameraTarget(epamCameraBounds);
 
-        mMap.setMyLocationEnabled(true);
+//        mMap.setMyLocationEnabled(true);
 
         final GroundOverlay imageOverlay = mMap.addGroundOverlay(groundOverlayOptions);
         imageOverlay.setClickable(true);
@@ -133,13 +138,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setMinZoomPreference(20.5f);
         mMap.setMaxZoomPreference(30.0f);
 
-        Polyline polyline = mMap.addPolyline(new PolylineOptions()
-                .clickable(true)
-                .add(
-                        epamLocNorthEast,
-                        epamLocSouthWest,
-                        new LatLng(-0.0001, 0.0001)
-                ));
+        DijkstraAlgorithm algorithm = new DijkstraAlgorithm(createGraph());
+        algorithm.execute(1);
+        List<Vertex> vertexList = algorithm.getPath(7);
+
+
+        PolylineOptions polylineOptions = new PolylineOptions();
+        for (int i = 0; i < vertexList.size(); i++) {
+            polylineOptions.add(vertexList.get(i).getLatLng());
+        }
+
+        mMap.addPolyline(polylineOptions);
 
         mMap.setOnGroundOverlayClickListener(new GoogleMap.OnGroundOverlayClickListener() {
             @Override
@@ -150,9 +159,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 Toast toast = Toast.makeText(context, text, duration);
                 toast.show();
-
-//                GroundOverlay imageOverlay2 = mMap.addGroundOverlay(groundOverlayOptions2);
-
             }
         });
     }
@@ -205,12 +211,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
                             showProximity();
 
-                            LatLng newLatLng = getLocationByTrilateration(epamLocTest1, 10,
-                                    epamLocNorthEast, 20,
-                                    epamLocSouthWest, 40);
-
-                            Log.d(MockActivity.class.getSimpleName(), "scannedDevices" + scannedDevices.size());
-                            mMap.addMarker(new MarkerOptions().position(newLatLng).title("Marker in Second Location"));
+//                            LatLng newLatLng = getLocationByTrilateration(epamLocTest1, 10,
+//                                    epamLocNorthEast, 20,
+//                                    epamLocSouthWest, 40);
+//
+//                            mMap.addMarker(new MarkerOptions().position(newLatLng).title("Trilateration marker"));
 
             }
             });
@@ -435,4 +440,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        double[] calculatedPosition = optimum.getPoint().toArray();
 //        return  calculatedPosition;
 //    }
+
+    public Graph createGraph() {
+        Graph graph = new Graph();
+
+        graph.addVertex(new Vertex(1, "", epamLoc1)).
+                addVertex(new Vertex(2, "", epamLoc2)).
+                addVertex(new Vertex(3, "", epamLoc3)).
+                addVertex(new Vertex(4, "", epamLoc4)).
+                addVertex(new Vertex(5, "", epamLoc5)).
+                addVertex(new Vertex(6, "", epamLoc6)).
+                addVertex(new Vertex(7, "", epamLoc7)).
+                addVertex(new Vertex(8, "", epamLoc8)).
+                addVertex(new Vertex(9, "", epamLoc9)).
+                addVertex(new Vertex(10, "", epamLoc10));
+
+        graph.addEdge(1, 2, 85).
+                addEdge(2, 3, 100).
+                addEdge(3, 4, 173).
+                addEdge(4, 5, 186).
+                addEdge(4, 9, 183).
+                addEdge(4, 8, 183).
+                addEdge(5, 6, 100).
+                addEdge(6, 7, 120).
+                addEdge(8, 9, 84).
+                addEdge(7, 8, 167).
+                addEdge(9, 10, 40);
+
+        return graph;
+    }
 }

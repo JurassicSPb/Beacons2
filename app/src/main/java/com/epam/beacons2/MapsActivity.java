@@ -8,6 +8,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, BluetoothAdapter.LeScanCallback {
 
@@ -45,6 +49,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng epamLoc0 = new LatLng(0, 0);
     private LatLng epamLocSouthWest = new LatLng(-0.0001, -0.0001);
     private LatLng epamLocNorthEast = new LatLng(0.0001, 0.0001);
+    private LatLng epamLocTest1 = new LatLng(0.0002, 0.0002);
 
     private double latitude = 0.0;
     private double longitude = 0.0;
@@ -208,22 +213,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onLeScan(final BluetoothDevice newDeivce, final int newRssi,
+    public void onLeScan(final BluetoothDevice newDevice, final int newRssi,
                          final byte[] newScanRecord) {
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                update(newDeivce, newRssi, newScanRecord);
+                update(newDevice, newRssi, newScanRecord);
                 showProximity();
 
-                
-//                LatLng newLatLng = getLocationByTrilateration(epamLocSouthWest, scannedDevices.get(0).getIBeacon().getAccuracy(),
-//                        epamLocSouthWest, scannedDevices.get(1).getIBeacon().getAccuracy(),
-//                        epamLocNorthEast, scannedDevices.get(2).getIBeacon().getAccuracy());
-//
-//                mMap.addMarker(new MarkerOptions().position(newLatLng).title("Marker in Second Location"));
+                LatLng newLatLng = getLocationByTrilateration(epamLocTest1, 10,
+                        epamLocNorthEast, 2,
+                        epamLocSouthWest, 4);
+
+                mMap.addMarker(new MarkerOptions().position(newLatLng).title("Marker in Second Location"));
+
             }
         }, 100);
     }
@@ -252,14 +257,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Collections.sort(scannedDevices, new Comparator<ScannedDevice>() {
             @Override
             public int compare(ScannedDevice lhs, ScannedDevice rhs) {
-                if (lhs.getIBeacon().getAccuracy() == 0) {
+                if (lhs.getRssi() == 0) {
                     return 1;
-                } else if (rhs.getIBeacon().getAccuracy() == 0) {
+                } else if (rhs.getRssi() == 0) {
                     return -1;
                 }
-                if (lhs.getIBeacon().getAccuracy() > rhs.getIBeacon().getAccuracy()) {
+                if (lhs.getRssi() > rhs.getRssi()) {
                     return -1;
-                } else if (lhs.getIBeacon().getAccuracy() < rhs.getIBeacon().getAccuracy()) {
+                } else if (lhs.getRssi() < rhs.getRssi()) {
                     return 1;
                 }
                 return 0;
@@ -287,6 +292,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng location3, double distance3) {
 
         //DECLARE VARIABLES
+        LatLng newLocation1 = new LatLng(location1.latitude * 100000, location1.longitude * 100000);
+        LatLng newLocation2 = new LatLng(location2.latitude * 100000, location2.longitude * 100000);
+        LatLng newLocation3 = new LatLng(location3.latitude * 100000, location3.longitude * 100000);
 
         double[] P1 = new double[2];
         double[] P2 = new double[2];
@@ -312,22 +320,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //TRANSALTE POINTS TO VECTORS
         //POINT 1
-        P1[0] = location1.latitude;
-        P1[1] = location1.longitude;
+        P1[0] = newLocation1.latitude;
+        P1[1] = newLocation1.longitude;
         //POINT 2
-        P2[0] = location2.latitude;
-        P2[1] = location2.longitude;
+        P2[0] = newLocation2.latitude;
+        P2[1] = newLocation2.longitude;
         //POINT 3
-        P3[0] = location3.latitude;
-        P3[1] = location3.longitude;
+        P3[0] = newLocation3.latitude;
+        P3[1] = newLocation3.longitude;
 
         //TRANSFORM THE METERS VALUE FOR THE MAP UNIT
         //DISTANCE BETWEEN POINT 1 AND MY LOCATION
-        distance1 = (distance1 / 100000);
+//        distance1 = (distance1 / 100000);
         //DISTANCE BETWEEN POINT 2 AND MY LOCATION
-        distance2 = (distance2 / 100000);
+//        distance2 = (distance2 / 100000);
         //DISTANCE BETWEEN POINT 3 AND MY LOCATION
-        distance3 = (distance3 / 100000);
+//        distance3 = (distance3 / 100000);
 
         for (int i = 0; i < P1.length; i++) {
             t1 = P2[i];
@@ -375,16 +383,40 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         xval = (Math.pow(distance1, 2) - Math.pow(distance2, 2) + Math.pow(d, 2)) / (2 * d);
         yval = ((Math.pow(distance1, 2) - Math.pow(distance3, 2) + Math.pow(ival, 2) + Math.pow(jval, 2)) / (2 * jval)) - ((ival / jval) * xval);
 
-        t1 = location1.latitude;
+        t1 = newLocation1.latitude;
         t2 = ex[0] * xval;
         t3 = ey[0] * yval;
         triptx = t1 + t2 + t3;
 
-        t1 = location1.longitude;
+        t1 = newLocation1.longitude;
         t2 = ex[1] * xval;
         t3 = ey[1] * yval;
         tripty = t1 + t2 + t3;
-
-        return new LatLng(triptx, tripty);
+        return new LatLng(triptx / 100000, tripty / 100000);
     }
+
+//    public double[] getLocationByTrilateration2(
+//            LatLng location1, double distance1,
+//            LatLng location2, double distance2,
+//            LatLng location3, double distance3) {
+//
+//        double x0 = cos(location1.longitude) * cos(location1.latitude);
+//        double y0 = sin(location1.longitude) * cos(location1.latitude);
+//        double z0 = sin(location1.latitude);
+//        double x1 = cos(location2.longitude) * cos(location2.latitude);
+//        double y1 = sin(location2.longitude) * cos(location2.latitude);
+//        double z1 = sin(location2.latitude);
+//        double x2 = cos(location3.longitude) * cos(location3.latitude);
+//        double y2 = sin(location3.longitude) * cos(location3.latitude);
+//        double z2 = sin(location3.latitude);
+//
+//        double[][] positions = new double[][] { { x0, y0 }, { x1, y1 }, { x2, y2 } };
+//        double[] distances = new double[] { distance1, distance2, distance3 };
+//
+//        NonLinearLeastSquaresSolver solver = new NonLinearLeastSquaresSolver(new TrilaterationFunction(positions, distances), new LevenbergMarquardtOptimizer());
+//        LeastSquaresOptimizer.Optimum optimum = solver.solve();
+//
+//        double[] calculatedPosition = optimum.getPoint().toArray();
+//        return  calculatedPosition;
+//    }
 }

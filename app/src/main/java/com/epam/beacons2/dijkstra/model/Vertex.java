@@ -4,22 +4,21 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class Vertex {
     private int id;
-    private LatLng latLng;
     private String name;
+    private LatLng latLng;
 
-
+    public Vertex(int id,  LatLng latLng) {
+        this.id = id;
+        this.latLng = latLng;
+    }
     public Vertex(int id) {
         this.id = id;
     }
 
-    public Vertex(int id, String name, double latitude, double longitude) {
+    public Vertex(int id, String name, LatLng latLng) {
         this.id = id;
         this.name = name;
-        latLng = new LatLng(latitude, longitude);
-    }
-
-    public LatLng getLatLng() {
-        return latLng;
+        this.latLng = latLng;
     }
 
     public int getId() {
@@ -49,5 +48,9 @@ public class Vertex {
     @Override
     public int hashCode() {
         return id;
+    }
+
+    public LatLng getLatLng() {
+        return latLng;
     }
 }

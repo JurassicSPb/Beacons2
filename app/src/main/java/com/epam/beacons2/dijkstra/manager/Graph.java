@@ -70,7 +70,7 @@ public class Graph {
     }
 
     public Graph addEdge(int sourceVertexId, int destinationVertexId, int weight) {
-        Edge temp = new Edge(new Vertex(sourceVertexId), new Vertex(destinationVertexId), weight);
+        Edge temp = new Edge(this.getVertexById(sourceVertexId), this.getVertexById(destinationVertexId), weight);
         if (!containsTwoVertexes(sourceVertexId, destinationVertexId))
             throw new RuntimeException("There is no such couple of source-destination for this edge");
         if (edgesList.contains(temp))

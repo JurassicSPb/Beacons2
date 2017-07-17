@@ -4,6 +4,7 @@ import com.epam.beacons2.dijkstra.engine.DijkstraAlgorithm;
 import com.epam.beacons2.dijkstra.manager.Graph;
 import com.epam.beacons2.dijkstra.model.Edge;
 import com.epam.beacons2.dijkstra.model.Vertex;
+import com.google.android.gms.maps.model.LatLng;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -18,22 +19,22 @@ public class TestDijkstraAlgorithm {
     public void create() {
         this.graph = new Graph();
         for (int i = 0; i < 11; i++)
-            graph.addVertex(i);
+            graph.addVertex(new Vertex(i, new LatLng((double)(i+100), (double)(i+100))));
 
         graph.addEdge(0, 1, 85).
-                addEdge(0, 2, 217).
-                addEdge(0, 4, 173).
-                addEdge(2, 6, 186).
-                addEdge(2, 7, 103).
-                addEdge(3, 7, 183).
-                addEdge(5, 8, 250).
-                addEdge(8, 9, 84).
-                addEdge(7, 9, 167).
-                addEdge(4, 9, 502).
-                addEdge(9, 10, 40).
-                addEdge(1, 10, 600);
+                addEdge(1, 2, 217).
+                addEdge(2, 3, 173).
+                addEdge(3, 4, 186).
+                addEdge(4, 5, 103).
+                addEdge(5, 6, 183).
+                addEdge(6, 7, 250).
+                addEdge(7, 8, 84).
+                addEdge(8, 9, 167).
+                addEdge(9, 10, 100).
+                addEdge(7, 10, 40).
+                addEdge(8, 10, 70);
 
-        graph.addEdge(2, 10, 30);
+        // graph.addEdge(2, 10, 30);
 
     }
 

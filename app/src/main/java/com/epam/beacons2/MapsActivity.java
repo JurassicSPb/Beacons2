@@ -3,8 +3,10 @@ package com.epam.beacons2;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -15,7 +17,6 @@ import android.widget.Toast;
 import com.epam.beacons2.util.BleUtil;
 import com.epam.beacons2.util.ScannedDevice;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,14 +29,10 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
 
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, BluetoothAdapter.LeScanCallback {
@@ -54,6 +51,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private double latitude = 0.0;
     private double longitude = 0.0;
 
+    private BluetoothLeScanner bluetoothLeScanner;
     private BluetoothAdapter mBTAdapter;
     private boolean mIsScanning;
     private ArrayList<ScannedDevice> scannedDevices = new ArrayList<>();
@@ -104,21 +102,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                        }
-                    }
-                });
-
-//        LatLng currentLoc = new LatLng(latitude, longitude);
+//        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+//
+//        mFusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        // Got last known location. In some rare situations this can be null.
+//                        if (location != null) {
+//                            latitude = location.getLatitude();
+//                            longitude = location.getLongitude();
+//                        }
+//                    }
+//                });
 
         // LatLng southwest, LatLng northeast
         LatLngBounds epamBounds = new LatLngBounds(epamLoc0, epamLoc0);
@@ -186,6 +182,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         BluetoothManager manager = BleUtil.getManager(this);
+
         if (manager != null) {
             mBTAdapter = manager.getAdapter();
 
@@ -195,19 +192,37 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             finish();
             return;
         }
+        bluetoothLeScanner = mBTAdapter.getBluetoothLeScanner();
         stopScan();
     }
 
     private void startScan() {
         if ((mBTAdapter != null) && (!mIsScanning)) {
-            mBTAdapter.startLeScan(this);
+//            mBTAdapter.startLeScan(this);
+            bluetoothLeScanner.startScan(new ScanCallback() {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result) {
+                            update(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes());
+                            showProximity();
+
+                            LatLng newLatLng = getLocationByTrilateration(epamLocTest1, 10,
+                                    epamLocNorthEast, 20,
+                                    epamLocSouthWest, 40);
+
+                            Log.d(MockActivity.class.getSimpleName(), "scannedDevices" + scannedDevices.size());
+                            mMap.addMarker(new MarkerOptions().position(newLatLng).title("Marker in Second Location"));
+
+            }
+            });
             mIsScanning = true;
         }
     }
 
     private void stopScan() {
         if (mBTAdapter != null) {
-            mBTAdapter.stopLeScan(this);
+            bluetoothLeScanner.stopScan(new ScanCallback(){
+            });
+//            mBTAdapter.stopLeScan(this);
         }
         mIsScanning = false;
     }
@@ -224,8 +239,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 showProximity();
 
                 LatLng newLatLng = getLocationByTrilateration(epamLocTest1, 10,
-                        epamLocNorthEast, 2,
-                        epamLocSouthWest, 4);
+                        epamLocNorthEast, 20,
+                        epamLocSouthWest, 40);
 
                 mMap.addMarker(new MarkerOptions().position(newLatLng).title("Marker in Second Location"));
 
@@ -241,6 +256,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         boolean contains = false;
         for (ScannedDevice device : scannedDevices) {
             if (newDevice.getAddress().equals(device.getDevice().getAddress())) {
+
                 contains = true;
                 // update
                 device.setRssi(rssi);
@@ -251,6 +267,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (!contains) {
             // add new BluetoothDevice
             scannedDevices.add(new ScannedDevice(newDevice, rssi, scanRecord));
+            Log.d(MockActivity.class.getSimpleName(), "hellohello");
         }
 
         // sort by distance
@@ -282,7 +299,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     proximity.setText(builder.toString());
                 }
             }
-
         }
     }
 

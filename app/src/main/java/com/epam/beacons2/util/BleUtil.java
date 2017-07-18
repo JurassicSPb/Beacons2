@@ -4,10 +4,6 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-/**
- * Created by Мария on 14.07.2017.
- */
-
 public class BleUtil {
     private BleUtil() {
         // Util

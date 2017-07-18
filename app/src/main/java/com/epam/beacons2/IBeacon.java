@@ -5,10 +5,6 @@ import android.util.Log;
 
 import java.util.Locale;
 
-/**
- * Created by Мария on 14.07.2017.
- */
-
 public class IBeacon {
     /**
      * Less than half a meter away
